@@ -1,0 +1,202 @@
+package Task5;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+
+public class Course {
+	    private String courseCode;
+	    private String title;
+	    private String description;
+	    private int capacity;
+	    private int enrolled;
+	    private String schedule;
+
+	    public Course(String courseCode, String title, String description, int capacity, String schedule) {
+	        this.courseCode = courseCode;
+	        this.title = title;
+	        this.description = description;
+	        this.capacity = capacity;
+	        this.schedule = schedule;
+	        this.enrolled = 0;
+	    }
+
+	    // Getters and Setters
+	    public String getCourseCode() { return courseCode; }
+	    public String getTitle() { return title; }
+	    public String getDescription() { return description; }
+	    public int getCapacity() { return capacity; }
+	    public int getEnrolled() { return enrolled; }
+	    public String getSchedule() { return schedule; }
+
+	    public boolean hasAvailableSlot() {
+	        return enrolled < capacity;
+	    }
+
+	    public void enrollStudent() {
+	        if (hasAvailableSlot()) {
+	            enrolled++;
+	        }
+	    }
+
+	    public void dropStudent() {
+	        if (enrolled > 0) {
+	            enrolled--;
+	        }
+	    }
+
+	    @Override
+	    public String toString() {
+	        return String.format("Course Code: %s\nTitle: %s\nDescription: %s\nCapacity: %d\nEnrolled: %d\nSchedule: %s\n",
+	                courseCode, title, description, capacity, enrolled, schedule);
+	    }
+	}
+
+class Student {
+    private String studentID;
+    private String name;
+    private Set<String> registeredCourses;
+
+    public Student(String studentID, String name) {
+        this.studentID = studentID;
+        this.name = name;
+        this.registeredCourses = new HashSet<>();
+    }
+
+    // Getters and Setters
+    public String getStudentID() { return studentID; }
+    public String getName() { return name; }
+    public Set<String> getRegisteredCourses() { return registeredCourses; }
+
+    public void registerCourse(String courseCode) {
+        registeredCourses.add(courseCode);
+    }
+
+    public void dropCourse(String courseCode) {
+        registeredCourses.remove(courseCode);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Student ID: %s\nName: %s\nRegistered Courses: %s\n", studentID, name, registeredCourses);
+    }
+}
+
+
+class CourseDatabase {
+    private Map<String, Course> courses;
+
+    public CourseDatabase() {
+        courses = new HashMap<>();
+    }
+
+    public void addCourse(Course course) {
+        courses.put(course.getCourseCode(), course);
+    }
+
+    public Course getCourse(String courseCode) {
+        return courses.get(courseCode);
+    }
+
+    public void displayAvailableCourses() {
+        for (Course course : courses.values()) {
+            System.out.println(course);
+        }
+    }
+
+    public boolean isCourseAvailable(String courseCode) {
+        Course course = courses.get(courseCode);
+        return course != null && course.hasAvailableSlot();
+    }
+}
+
+
+class StudentDatabase {
+    private Map<String, Student> students;
+
+    public StudentDatabase() {
+        students = new HashMap<>();
+    }
+
+    public void addStudent(Student student) {
+        students.put(student.getStudentID(), student);
+    }
+
+    public Student getStudent(String studentID) {
+        return students.get(studentID);
+    }
+}
+class RegistrationSystem {
+    private CourseDatabase courseDatabase;
+    private StudentDatabase studentDatabase;
+
+    public RegistrationSystem(CourseDatabase courseDatabase, StudentDatabase studentDatabase) {
+        this.courseDatabase = courseDatabase;
+        this.studentDatabase = studentDatabase;
+    }
+
+    public void registerStudentForCourse(String studentID, String courseCode) {
+        Student student = studentDatabase.getStudent(studentID);
+        Course course = courseDatabase.getCourse(courseCode);
+
+        if (student != null && course != null && course.hasAvailableSlot()) {
+            student.registerCourse(courseCode);
+            course.enrollStudent();
+            System.out.println("Registration successful.");
+        } else {
+            System.out.println("Registration failed.");
+        }
+    }
+
+    public void dropStudentFromCourse(String studentID, String courseCode) {
+        Student student = studentDatabase.getStudent(studentID);
+        Course course = courseDatabase.getCourse(courseCode);
+
+        if (student != null && course != null && student.getRegisteredCourses().contains(courseCode)) {
+            student.dropCourse(courseCode);
+            course.dropStudent();
+            System.out.println("Course dropped successfully.");
+        } else {
+            System.out.println("Course drop failed.");
+        }
+    }
+}
+
+ class mainClass {
+    public static void main(String[] args) {
+        CourseDatabase courseDatabase = new CourseDatabase();
+        StudentDatabase studentDatabase = new StudentDatabase();
+
+        courseDatabase.addCourse(new Course("CS101", "Intro to Computer Science", "Basics of CS", 2, "MWF 9-10"));
+        courseDatabase.addCourse(new Course("MATH101", "Calculus I", "Introduction to Calculus", 3, "TTh 10-11:30"));
+
+        studentDatabase.addStudent(new Student("S1", "Alice"));
+        studentDatabase.addStudent(new Student("S2", "Bob"));
+
+        RegistrationSystem registrationSystem = new RegistrationSystem(courseDatabase, studentDatabase);
+
+        // Display available courses
+        courseDatabase.displayAvailableCourses();
+
+        // Register students
+        registrationSystem.registerStudentForCourse("S1", "CS101");
+        registrationSystem.registerStudentForCourse("S1", "MATH101");
+
+        // Attempt to register a student for a full course
+        registrationSystem.registerStudentForCourse("S2", "CS101");
+        registrationSystem.registerStudentForCourse("S2", "CS101");
+
+        // Drop a course
+        registrationSystem.dropStudentFromCourse("S1", "CS101");
+
+        // Display available courses again to see the updated slots
+        courseDatabase.displayAvailableCourses();
+    }
+}
+
+
+
+
