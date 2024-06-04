@@ -1,0 +1,93 @@
+package Task3;
+
+import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+public class QuizApp {
+    private static final int QUESTION_TIME_LIMIT = 10; // seconds
+    private static Scanner scanner = new Scanner(System.in);
+    private static int score = 0;
+
+    public static void main(String[] args) {
+        Question[] questions = new Question[] {
+            new Question("What is the capital of France?", new String[] {"1. Paris", "2. London", "3. Rome", "4. Berlin"}, 0),
+            new Question("What is 2 + 2?", new String[] {"1. 3", "2. 4", "3. 5", "4. 6"}, 1),
+            new Question("What is the color of the sky?", new String[] {"1. Blue", "2. Green", "3. Red", "4. Yellow"}, 0)
+        };
+
+        for (Question question : questions) {
+            askQuestion(question);
+        }
+
+        System.out.println("Quiz over!");
+        System.out.println("Your score: " + score + "/" + questions.length);
+    }
+
+    private static void askQuestion(Question question) {
+        System.out.println(question.getQuestionText());
+        String[] options = question.getOptions();
+        for (String option : options) {
+            System.out.println(option);
+        }
+
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        Runnable task = new Runnable() {
+            public void run() {
+                System.out.println("Time's up!");
+                scanner.nextLine(); // consume any remaining input
+                System.out.println("Moving to the next question...");
+            }
+        };
+
+        executor.schedule(task, QUESTION_TIME_LIMIT, TimeUnit.SECONDS);
+
+        System.out.print("Enter your answer (1-4): ");
+        int userAnswer = -1;
+        try {
+            userAnswer = scanner.nextInt() - 1;
+            scanner.nextLine(); // consume newline
+            if (userAnswer >= 0 && userAnswer < options.length && question.isCorrect(userAnswer)) {
+                score++;
+                System.out.println("Correct!");
+            } else {
+                System.out.println("Incorrect. The correct answer was: " + options[question.getCorrectAnswerIndex()]);
+            }
+        } catch (Exception e) {
+            System.out.println("Invalid input.");
+            scanner.nextLine(); // consume invalid input
+        }
+
+        executor.shutdownNow();
+    }
+}
+
+class Question {
+    private String questionText;
+    private String[] options;
+    private int correctAnswerIndex;
+
+    public Question(String questionText, String[] options, int correctAnswerIndex) {
+        this.questionText = questionText;
+        this.options = options;
+        this.correctAnswerIndex = correctAnswerIndex;
+    }
+
+    public String getQuestionText() {
+        return questionText;
+    }
+
+    public String[] getOptions() {
+        return options;
+    }
+
+    public int getCorrectAnswerIndex() {
+        return correctAnswerIndex;
+    }
+
+    public boolean isCorrect(int answerIndex) {
+        return answerIndex == correctAnswerIndex;
+    }
+}
+
